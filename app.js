@@ -3,11 +3,6 @@
   - Você poderá modificar a marcação e estilos da aplicação depois. No momento, 
     concentre-se em executar o que descreverei abaixo;
     - Quando a página for carregada: 
-      - Popule os <select> com tags <option> que contém as moedas que podem ser
-        convertidas. "BRL" para real brasileiro, "EUR" para euro, "USD" para 
-        dollar dos Estados Unidos, etc.
-      - O option selecionado por padrão no 1º <select> deve ser "USD" e o option
-        no 2º <select> deve ser "BRL";
       - O parágrafo com data-js="converted-value" deve exibir o resultado da 
         conversão de 1 USD para 1 BRL;
       - Quando um novo número for inserido no input com 
@@ -31,9 +26,41 @@
   para análise antes de ver as próximas aulas, ok? =)
 */
 
-//! Second step: Get all the elements references from the HTML
 const currencyOne = document.querySelector('[data-js="currency-one"]');
 const currencyTwo = document.querySelector('[data-js="currency-two"]');
 const amountToConvert = document.querySelector('[data-js="currency-one-times"]');
 const convertedValue = document.querySelector('[data-js="converted-value"]');
 const conversionPrecision = document.querySelector('[data-js="conversion-precision"]');
+
+//TODO: Futuro - Para não fazer uma requisição sempre para isso, salvar as moedas no localStorage!
+const populateSelects = async () => {
+  const { supported_codes: availableCurrencies } = await getCurrencyData();
+
+  availableCurrencies.forEach(([initials]) => {
+    const option = document.createElement('option');
+
+    if (initials === 'USD') {
+      option.setAttribute('selected', 'selected');
+      option.textContent = initials;
+    } else {
+      option.textContent = initials;
+    }
+
+    currencyOne.insertAdjacentElement('afterbegin', option);
+  });
+
+  availableCurrencies.forEach(([initials]) => {
+    const option = document.createElement('option');
+
+    if (initials === 'BRL') {
+      option.setAttribute('selected', 'selected');
+      option.textContent = initials;
+    } else {
+      option.textContent = initials;
+    }
+
+    currencyTwo.insertAdjacentElement('afterbegin', option);
+  });
+};
+
+populateSelects();
