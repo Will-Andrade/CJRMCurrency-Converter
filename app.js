@@ -1,43 +1,34 @@
 const currencyOne = document.querySelector('[data-js="currency-one"]');
 const currencyTwo = document.querySelector('[data-js="currency-two"]');
-const amountToConvert = document.querySelector('[data-js="currency-one-times"]');
+const amountToConvert = document
+  .querySelector('[data-js="currency-one-times"]');
 const convertedValue = document.querySelector('[data-js="converted-value"]');
-const conversionPrecision = document.querySelector('[data-js="conversion-precision"]');
+const conversionPrecision = document
+  .querySelector('[data-js="conversion-precision"]');
 
-//TODO: Futuro - Para não fazer uma requisição sempre para isso, salvar as moedas no localStorage!
+const createCurrencyOptions = (currencies, wantedCurrency, container) => {
+  currencies.forEach(([initials]) => {
+    const option = document.createElement('option');
+
+    if (initials === wantedCurrency) {
+      option.setAttribute('selected', 'selected');
+      option.textContent = initials;
+    } else {
+      option.textContent = initials;
+    }
+
+    container.insertAdjacentElement('afterbegin', option);
+  });
+};
+
 const populateSelects = async () => {
   const { supported_codes: availableCurrencies } = await getCurrencyData();
 
-  availableCurrencies.forEach(([initials]) => {
-    const option = document.createElement('option');
-
-    if (initials === 'USD') {
-      option.setAttribute('selected', 'selected');
-      option.textContent = initials;
-    } else {
-      option.textContent = initials;
-    }
-
-    currencyOne.insertAdjacentElement('afterbegin', option);
-  });
-
-  availableCurrencies.forEach(([initials]) => {
-    const option = document.createElement('option');
-
-    if (initials === 'BRL') {
-      option.setAttribute('selected', 'selected');
-      option.textContent = initials;
-    } else {
-      option.textContent = initials;
-    }
-
-    currencyTwo.insertAdjacentElement('afterbegin', option);
-  });
+  createCurrencyOptions(availableCurrencies, 'USD', currencyOne);
+  createCurrencyOptions(availableCurrencies, 'BRL', currencyTwo);
 
   showConvertedValue();
 };
-
-populateSelects();
 
 const showConversionRate = conversionRate => {
   showConvertedValue();
@@ -53,6 +44,8 @@ const showConvertedValue = async () => {
   convertedValue.textContent = result.toFixed(2);
 };
 
+populateSelects();
+
 amountToConvert.addEventListener('input', () => {
   showConvertedValue();
-})
+});
