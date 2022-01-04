@@ -61,6 +61,19 @@ const populateSelects = async () => {
 
     currencyTwo.insertAdjacentElement('afterbegin', option);
   });
+
+  showConvertedValue();
 };
 
 populateSelects();
+
+//TODO: Fazer o parágrafo 'convertedValue' exibir o resultado da conversão
+const showConvertedValue = async () => {
+  const { conversion_result: result } = await getConversionData(currencyOne.value, currencyTwo.value, amountToConvert.value);
+
+  convertedValue.textContent = result;
+};
+
+amountToConvert.addEventListener('input', () => {
+  showConvertedValue();
+})
