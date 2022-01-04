@@ -1,13 +1,5 @@
 /*
   07
-
-  - No index.html, comente a div com a classe "container" que contém a tabela;
-  - Descomente: 
-    - A <div> com a classe "container" abaixo da div que você acabou de 
-      comentar;
-    - A <link> que importa o style.css;
-  - Construa uma aplicação de conversão de moedas. O HTML e CSS são os que 
-    você está vendo no browser (após salvar os arquivos);
   - Você poderá modificar a marcação e estilos da aplicação depois. No momento, 
     concentre-se em executar o que descreverei abaixo;
     - Quando a página for carregada: 
@@ -38,3 +30,10 @@
   PS: o desafio aqui é você implementar essa aplicação sozinho(a) e enviá-la 
   para análise antes de ver as próximas aulas, ok? =)
 */
+
+//! Second step: Get all the elements references from the HTML
+const currencyOne = document.querySelector('[data-js="currency-one"]');
+const currencyTwo = document.querySelector('[data-js="currency-two"]');
+const amountToConvert = document.querySelector('[data-js="currency-one-times"]');
+const convertedValue = document.querySelector('[data-js="converted-value"]');
+const conversionPrecision = document.querySelector('[data-js="conversion-precision"]');
