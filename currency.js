@@ -1,4 +1,4 @@
-const APIKey = '059ea44b9d831c4224dc856b';
+const APIKey = '8050f7e7b7fcf23dd8b046ea';
 const baseURL = 'https://v6.exchangerate-api.com/v6';
 
 const getConversionURL = (currencyOne, currencyTwo, amount) => 
@@ -15,7 +15,7 @@ const fetchData = async endpoint => {
   }
 };
 
-const getConversionData = (currencyOne, currencyTwo, amount) => 
-  fetchData(getConversionURL(currencyOne, currencyTwo, amount));
+const getConversionData = (currencyOne, currencyTwo, amountToConvert) => 
+  fetchData(getConversionURL(currencyOne, currencyTwo, amountToConvert));
 
 const getCurrencyData = () => fetchData(getCurrencyURL());
