@@ -1,110 +1,95 @@
-/*
-  - Quando a página for carregada: 
-    - O parágrafo com data-js="converted-value" deve exibir o resultado da 
-      conversão de 1 USD para 1 BRL;
-    - Quando um novo número for inserido no input com 
-      data-js="currency-one-times", o parágrafo do item acima deve atualizar 
-      seu valor;
-    - O parágrafo com data-js="conversion-precision" deve conter a conversão 
-      apenas x1. Exemplo: 1 USD = 5.0615 BRL;
-    - O conteúdo do parágrafo do item acima deve ser atualizado à cada 
-      mudança nos selects;
-    - O conteúdo do parágrafo data-js="converted-value" deve ser atualizado à
-      cada mudança nos selects e/ou no input com data-js="currency-one-times";
-    - Para que o valor contido no parágrafo do item acima não tenha mais de 
-      dois dígitos após o ponto, você pode usar o método toFixed: 
-      https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/toFixed
-*/
-
+const currencyContainer = document.querySelector('[data-js="currency-container"]');
 const currencyOne = document.querySelector('[data-js="currency-one"]');
 const currencyTwo = document.querySelector('[data-js="currency-two"]');
-const wantedAmount = document.querySelector('[data-js="currency-one-times"]');
+const currencyInput = document.querySelector('[data-js="currency-one-times"]');
 const convertedValue = document.querySelector('[data-js="converted-value"]');
-const conversionPrecision = document
-  .querySelector('[data-js="conversion-precision"]');
+const conversionRate = document.querySelector('[data-js="conversion-rate"]');
 
-const saveCurrencyInfoOnLocalStorage = async () => {
-  const { supported_codes: currencyArray } = await getCurrencyData();
-  
-  const currencyArrayJSON = JSON.stringify(currencyArray);
-  localStorage.setItem('availableCurrencies', currencyArrayJSON);
+const APIKey = '8050f7e7b7fcf23dd8b046ea';
+
+const getExchangeURL = currency => 
+  `https://v6.exchangerate-api.com/v6/${APIKey}/latest/${currency}`;
+
+const fetchExchangeData = async currency => {
+  try {
+    const response = await fetch(getExchangeURL(currency));
+    const conversionData = await response.json();
+
+    if (!response.ok) {
+      throw new Error(conversionData['error-type']);
+    }
+
+    return await conversionData;
+  } catch (err) {
+    alert (err);
+  }
 };
 
-const createSelectOptionsAndInsertThemIntoDOM = () => {
-  const currencies = JSON.parse(localStorage.getItem('availableCurrencies'));
-
-  currencies.forEach(([initials]) => {
-    const option = document.createElement('option');
-
-    if (initials === 'USD') {
-      option.setAttribute('selected', 'selected');
-      option.textContent = initials;
-      currencyOne.insertAdjacentElement('afterbegin', option);
-    } else {
-      option.textContent = initials;
-      currencyOne.insertAdjacentElement('afterbegin', option);
+const state = (() => {
+  let exchangeRate = {};
+  return {
+    getExchangeRate: () => exchangeRate,
+    setExchangeRate: newExchangeRate => {
+      if (!newExchangeRate.conversion_rates) {
+        console.log('The object needs a conversion_rates property!');
+        return
+      }
+      
+      exchangeRate = newExchangeRate;
+      return exchangeRate;
     }
-  });
-
-  currencies.forEach(([initials]) => {
-    const option = document.createElement('option');
-
-    if (initials === 'BRL') {
-      option.setAttribute('selected', 'selected');
-      option.textContent = initials;
-      currencyTwo.insertAdjacentElement('afterbegin', option);
-    } else {
-      option.textContent = initials;
-      currencyTwo.insertAdjacentElement('afterbegin', option);
-    }
-  });
-}
-
-if (localStorage.getItem('availableCurrencies')) {
-  console.log('As informações das moedas existem!');
-} else {
-  console.log('Informações não existem!');
-  saveCurrencyInfoOnLocalStorage();
-  createSelectOptionsAndInsertThemIntoDOM();
-}
-
-
-createSelectOptionsAndInsertThemIntoDOM();
-
-const saveConversionRateOnLocalStorage = async () => {
-  const { base_code: option1, target_code: option2, conversion_rate: rate  } = 
-    await getConversionData(currencyOne.value, currencyTwo.value, wantedAmount.value);
-
-  localStorage.setItem(`${option1}to${option2}`, rate);
-}
-
-const getConversionRate = () => {
-  const conversionRate = JSON.parse(localStorage.getItem(`${currencyOne.value}to${currencyTwo.value}`));
-
-  if (conversionRate) {
-    return conversionRate;
   }
+})();
 
-  saveConversionRateOnLocalStorage();
-}
+const getOptions = selectedCurrency => currenciesArr => currenciesArr
+  .map(currency => 
+    `<option ${selectedCurrency === currency ? 'selected' : ''}>${currency}</option>`
+  ).join('');
 
-getConversionRate()
+const insertOptionsIntoDOM = optionsArr => {
+  currencyOne.innerHTML = getOptions('USD')(optionsArr);
+  currencyTwo.innerHTML = getOptions('BRL')(optionsArr);
+};
 
-const convertCurrency = () => {
-  const currentRate = getConversionRate();
+const insertConversionDataIntoDOM = conversion_rates => {
+  const formattedValue = conversion_rates[currencyTwo.value].toFixed(2);
+  convertedValue.textContent = formattedValue;
+  conversionRate.textContent = `1 ${currencyOne.value} = ${formattedValue} ${currencyTwo.value}`;
+};
+
+const showUSDToBRLExchange = ({ conversion_rates }) => {
+  insertOptionsIntoDOM(Object.keys(conversion_rates));
+  insertConversionDataIntoDOM(conversion_rates);
+};
+
+const initHandler = async () => {
+  const exchangeRate = state.setExchangeRate(await fetchExchangeData('USD'));
+  if (exchangeRate.conversion_rates) showUSDToBRLExchange(exchangeRate);
+};
+
+const renderExchangedResult = e => {
+  const { conversion_rates } = state.getExchangeRate();
+  const exchangedResult = e.target.value * conversion_rates[currencyTwo.value];
+  convertedValue.textContent = exchangedResult.toFixed(2);
+};
+
+const handleCurrencyChange = async ({ target }) => {
+  const changedCurrencyOne = target === currencyOne;
+  const changedCurrencyTwo = target === currencyTwo;
   
-  convertedValue.textContent = (wantedAmount.value * currentRate).toFixed(2)
-}
+  if (changedCurrencyOne) {
+    const { conversion_rates } = 
+      state.setExchangeRate(await fetchExchangeData(currencyOne.value));
+    insertConversionDataIntoDOM(conversion_rates);
+    return
+  }
+  
+  if (changedCurrencyTwo) {
+    const { conversion_rates } = state.getExchangeRate();
+    insertConversionDataIntoDOM(conversion_rates);
+  };
+};
 
-const showPrecision = () => {
-  const currentRate = getConversionRate();
-
-  conversionPrecision.textContent = `1 ${currencyOne.value} = ${currentRate} ${currencyTwo.value}`
-}
-
-convertCurrency()
-showPrecision();
-
-wantedAmount.addEventListener('input', () => {
-  convertCurrency()
-})
+initHandler();
+currencyInput.addEventListener('input', renderExchangedResult);
+currencyContainer.addEventListener('input', handleCurrencyChange);
