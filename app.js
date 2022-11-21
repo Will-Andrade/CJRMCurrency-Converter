@@ -7,6 +7,14 @@ const conversionRate = document.querySelector('[data-js="conversion-rate"]');
 
 const APIKey = '8050f7e7b7fcf23dd8b046ea';
 
+const generateErrorMessage = (errType, customMessage) => ({
+  "unsupported-code": 'Currency code not supported!',
+  "malformed-request": 'The request was malformed. Please, try again later!',
+  "invalid-key": 'The API key is invalid. Please, try again later!',
+  "inactive-account": 'The account used for the API is inactive. Please, contact support!',
+  "quota-reached": 'The API has reached the maxium request quota. Please, check the available plans at https://www.exchangerate-api.com/#pricing'
+})[errType] || customMessage;
+
 const getExchangeURL = currency => 
   `https://v6.exchangerate-api.com/v6/${APIKey}/latest/${currency}`;
 
@@ -16,7 +24,7 @@ const fetchExchangeData = async currency => {
     const conversionData = await response.json();
 
     if (!response.ok) {
-      throw new Error(conversionData['error-type']);
+      throw new Error(generateErrorMessage(conversionData['error-type'], null));
     }
 
     return await conversionData;
@@ -31,7 +39,7 @@ const state = (() => {
     getExchangeRate: () => exchangeRate,
     setExchangeRate: newExchangeRate => {
       if (!newExchangeRate.conversion_rates) {
-        console.log('The object needs a conversion_rates property!');
+        alert(generateErrorMessage(null, 'The object needs a conversion_rates property!'));
         return
       }
       
@@ -64,7 +72,7 @@ const showUSDToBRLExchange = ({ conversion_rates }) => {
 
 const initHandler = async () => {
   const exchangeRate = state.setExchangeRate(await fetchExchangeData('USD'));
-  if (exchangeRate.conversion_rates) showUSDToBRLExchange(exchangeRate);
+  if (exchangeRate && exchangeRate.conversion_rates) showUSDToBRLExchange(exchangeRate);
 };
 
 const renderExchangedResult = e => {
